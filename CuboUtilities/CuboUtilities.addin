@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<RevitAddIns>
+
+	<AddIn Type="Command">
+		<Name>CuboUtilities</Name>
+		<Assembly>CuboUtilities.dll</Assembly>
+		<AddInId>
+			398752D7-7A92-4FDD-906B-812CDBD3109B
+		</AddInId>
+		<FullClassName>CuboUtilities.GroupOrganization</FullClassName>
+		<Text>GroupOrganization</Text>
+		<Description>Organize all group names</Description>
+		<VendorId>001</VendorId>
+		<VendorDescription>Ian Mota - Cubo Engenharia</VendorDescription>
+		<VisibilityMode>NotVisibleWhenNoActiveDocument</VisibilityMode>
+	</AddIn>
+	
+</RevitAddIns>
