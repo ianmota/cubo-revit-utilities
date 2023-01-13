@@ -7,10 +7,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
-using System.Xml.Schema;
-using System.Text.RegularExpressions;
 using Group = Autodesk.Revit.DB.Group;
-using System.Security.Cryptography.X509Certificates;
 
 namespace CuboUtilities
 {
@@ -30,7 +27,6 @@ namespace CuboUtilities
                           .ToArray());
             return result;
         }
-
         public static IList<Group> AllGrps(Document doc)
         {   //
             //Resumo:
@@ -38,12 +34,12 @@ namespace CuboUtilities
 
             IList<Group> allGrps = new FilteredElementCollector(doc)
             .OfClass(typeof(Group))
+            .OfCategory(BuiltInCategory.OST_IOSModelGroups)
             .Cast<Group>()
             .ToList();
 
             return (allGrps);
         }
-
         public static void RandomRenameGroups(IList<Group> groups, Document doc)
         {
             //
@@ -60,7 +56,6 @@ namespace CuboUtilities
                 }
             }
         }
-
         public static int OrdenatedRenameGroups(IList<Group> groups, XYZ linepoint, Document doc, int nGroup)
         {
             
@@ -101,7 +96,6 @@ namespace CuboUtilities
             return nGroup;
 
         }
-
         public static List<XYZ> LinePoints(IList<XYZ> groupsPoint, string oriented)
         {   
             //
@@ -140,7 +134,6 @@ namespace CuboUtilities
             return linePoints;
             
         }
-
         public static IList<Group> OrientationGroups(IList<Group> groups, View view, string orientation)
         {   //
             //Resumo:
@@ -174,7 +167,6 @@ namespace CuboUtilities
             }
             return orientedGroups;
         }
-
         public static IList<LocationPoint> GroupsLocation(IList<Group> groups)
         {
             //
@@ -188,7 +180,6 @@ namespace CuboUtilities
             }
             return grpLocations;
         }
-
         public static IList<XYZ> GroupsPoints(IList<LocationPoint> groupsLocation)
         {
             //
@@ -202,7 +193,6 @@ namespace CuboUtilities
             }
             return groupsPoints;
         }
-
         public static int TotalLines(IList<XYZ> grpPoints,string oriented)
         {
             //
@@ -232,7 +222,6 @@ namespace CuboUtilities
             
             return lineTotal;
         }
-              
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             //get application and document objets
@@ -243,107 +232,31 @@ namespace CuboUtilities
             if (AllGrps(doc).Count > 0)
             {
                 RandomRenameGroups(AllGrps(doc), doc);
-                IList<Group> flatGroups = OrientationGroups(AllGrps(doc), view, "horizontal");
-                IList<LocationPoint> flatGroupsLocation = GroupsLocation(flatGroups);
-                IList<XYZ> flatGroupsPoints = GroupsPoints(flatGroupsLocation);
-                int yTotalLines = TotalLines(flatGroupsPoints,"horizontal");
-
-                int flatCount = 0;
                 int nGroup = 1;
-                while (flatCount < yTotalLines)
+
+                IList<string> groupPosition = new List<string> { "horizontal", "vertical" };
+
+                foreach (string _position in groupPosition)
                 {
-                    List<XYZ> flatLinePoints = LinePoints(flatGroupsPoints, "horizontal");
-                    foreach (XYZ point in flatLinePoints)
+                    IList<Group> flatGroups = OrientationGroups(AllGrps(doc), view, _position);
+                    IList<LocationPoint> flatGroupsLocation = GroupsLocation(flatGroups);
+                    IList<XYZ> flatGroupsPoints = GroupsPoints(flatGroupsLocation);
+                    int yTotalLines = TotalLines(flatGroupsPoints,_position);
+
+                    int flatCount = 0;
+                    while (flatCount < yTotalLines)
                     {
-                        flatGroupsPoints.Remove(point);
-                        nGroup = OrdenatedRenameGroups(flatGroups, point, doc, nGroup);
-                    }
-
-                    flatCount += 1;
-                }
-            }
-
-            /*Upright manipulations
-            List<XYZ> vPoints = new List<XYZ>();
-            IList<LocationPoint> vLocations = new List<LocationPoint>();
-
-            foreach (Group grp in grpsVertical)
-            {
-                //take all groups points and groups locations
-                LocationPoint vLocation = grp.Location as LocationPoint;
-                vPoints.Add(vLocation.Point);
-                vLocations.Add(grp.Location as LocationPoint);
-            }
-
-            List<string> pointsX = new List<string>();
-            foreach (XYZ _p in vPoints)
-            {
-                pointsX.Add(_p.X.ToString("F"));
-            }
-
-            HashSet<string> pXWithoutDuplicates = new HashSet<string>(pointsX); //remove duplicates
-            int xTotal = pXWithoutDuplicates.Count; //total upright groups
-
-            int vCont = 0;
-            while (vCont < xTotal)
-            {
-
-                IList<double> points = new List<double>();
-                foreach (XYZ point in vPoints)
-                {
-                    points.Add(point.X);
-                }
-                double xMin = points.Min();
-
-                List<XYZ> linePoints = vPoints
-                    .Where(x => x.X.ToString("F") == xMin.ToString("F"))
-                    .OrderByDescending(p => p.Y)
-                    .ToList();
-
-                foreach (XYZ linepoint in linePoints)
-                {
-                    vPoints.Remove(linepoint);
-                    foreach (Group grp in grpsVertical)
-                    {
-                        LocationPoint lPoint = grp.Location as LocationPoint;
-                        XYZ refPoint = lPoint.Point;
-
-                        if (linepoint.ToString() == refPoint.ToString())
+                        List<XYZ> flatLinePoints = LinePoints(flatGroupsPoints, _position);
+                        foreach (XYZ point in flatLinePoints)
                         {
-                            using (Transaction trans = new Transaction(doc, "Update GroupName (2)"))
-                            {
-                                string grpNome = grp.Name.ToString();
-                                if (grpNome.All(char.IsDigit))
-                                {
-                                    continue;
-                                }
-                                else
-                                {
-                                    trans.Start();
-                                    if (nGroup < 10)
-                                    {
-                                        grp.GroupType.Name = "0" + nGroup.ToString();
-                                    }
-                                    else if (nGroup >= 10)
-                                    {
-                                        grp.GroupType.Name = nGroup.ToString();
-                                    }
-                                    trans.Commit();
-
-                                    nGroup += 1;
-                                }
-
-                            }
-                            break;
+                            flatGroupsPoints.Remove(point);
+                            nGroup = OrdenatedRenameGroups(flatGroups, point, doc, nGroup);
                         }
-
+                        flatCount += 1;
                     }
-
                 }
-
-                vCont += 1;
-            }*/
-            TaskDialog.Show("Grupos no Modelo", "Os grupos foram renomeados com sucesso!");
+                TaskDialog.Show("Grupos no Modelo", "Os grupos foram renomeados com sucesso!");
+            }
 
             return Result.Succeeded;
 
