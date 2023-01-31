@@ -30,7 +30,7 @@ namespace CuboUtilities
         public static IList<Group> AllGrps(Document doc)
         {   //
             //Resumo:
-            //select all document groups
+            //select all document model groups
 
             IList<Group> allGrps = new FilteredElementCollector(doc)
             .OfClass(typeof(Group))
@@ -76,14 +76,9 @@ namespace CuboUtilities
                         else
                         {
                             trans.Start();
-                            if (nGroup < 10)
-                            {
-                                grp.GroupType.Name = "0" + nGroup.ToString();
-                            }
-                            else if (nGroup >= 10)
-                            {
-                                grp.GroupType.Name = nGroup.ToString();
-                            }
+
+                            grp.GroupType.Name = nGroup.ToString("00");
+
                             trans.Commit();
                             nGroup += 1;
                         }
@@ -116,7 +111,7 @@ namespace CuboUtilities
 
             double yMax = pointsY.Max();
             double xMin = pointsX.Min();
-
+            
             if (oriented.Equals("horizontal"))
             {
                 linePoints = groupsPoint
@@ -195,32 +190,7 @@ namespace CuboUtilities
         }
         public static int TotalLines(IList<XYZ> grpPoints,string oriented)
         {
-            //
-            //Resumo:
-            //counts groups total lines
-            int lineTotal = 0;
-            List<string> points = new List<string>();
-
-            if (oriented.Equals("vertical"))
-            {
-                foreach (XYZ _p in grpPoints)
-                {
-                    points.Add(_p.X.ToString("F"));
-                }
-
-            }
-            else if (oriented.Equals("horizontal"))
-            {
-                foreach (XYZ _p in grpPoints)
-                {
-                    points.Add(_p.Y.ToString("F"));
-                }
-            }
-
-            HashSet<string> pXWithoutDuplicates = new HashSet<string>(points); 
-            lineTotal = pXWithoutDuplicates.Count; 
-            
-            return lineTotal;
+            return grpPoints.Select(point => (oriented == "vertical" ? point.X : point.Y).ToString("F")).Distinct().Count();
         }
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -255,11 +225,9 @@ namespace CuboUtilities
                         flatCount += 1;
                     }
                 }
-                TaskDialog.Show("Grupos no Modelo", "Os grupos foram renomeados com sucesso!");
+                TaskDialog.Show("Result", "Os grupos foram renomeados com sucesso!");
             }
-
             return Result.Succeeded;
-
         }
     }
 }
