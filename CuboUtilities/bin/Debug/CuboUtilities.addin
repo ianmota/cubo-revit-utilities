@@ -14,5 +14,20 @@
 		<VendorDescription>Ian Mota - Cubo Engenharia</VendorDescription>
 		<VisibilityMode>NotVisibleWhenNoActiveDocument</VisibilityMode>
 	</AddIn>
+
+	<AddIn Type="Command">
+		<Name>CuboUtilities</Name>
+		<Assembly>CuboUtilities.dll</Assembly>
+		<AddInId>
+			758E018E-BAC2-4798-9D8A-73B9F2E2D864
+		</AddInId>
+		<FullClassName>CuboUtilities.ElevationCreation</FullClassName>
+		<Text>ElevationCriation</Text>
+		<Description>Create all elevation by groups</Description>
+		<VendorId>002</VendorId>
+		<VendorDescription>Ian Mota - Cubo Engenharia</VendorDescription>
+		<VisibilityMode>NotVisibleWhenNoActiveDocument</VisibilityMode>
+	</AddIn>
+	
 	
 </RevitAddIns>
