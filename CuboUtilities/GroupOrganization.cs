@@ -198,7 +198,6 @@ namespace CuboUtilities
             UIDocument uidoc = commandData.Application.ActiveUIDocument;
             Document doc = uidoc.Document;
             View view = doc.ActiveView;
-
             if (AllGrps(doc).Count > 0)
             {
                 RandomRenameGroups(AllGrps(doc), doc);
