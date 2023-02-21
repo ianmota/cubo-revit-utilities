@@ -23,9 +23,9 @@
   
 </h2>
 <p align="justify">
-  :white_check_mark: Groups organization by our standard
-  :white_check_mark: Organized Elevations Symbol generation
-  :construction: Automatic blocks parameters input
+  :white_check_mark: Groups organization by our standard<br>
+  :white_check_mark: Organized Elevations Symbol generation<br>
+  :construction: Automatic blocks parameters input<br>
   
   
   If you need more information <a href="https://www.linkedin.com/in/ian-mota-164a36195/">contacte-me</a>!
