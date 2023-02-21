@@ -7,12 +7,27 @@
 </h2>
 
 <p align="justify">
-This project automates a lot of boring stuffs to structural masonry design, like:
+  This project will automates a lot of boring stuffs to structural masonry design, like:
  
  - Elevation detailing
  - Block clash detection
  - Modeling verification
+ - Group Organization
+ - Elevation Generation
  
   All this with the Revit API integration and C++ programation
+</p>
+
+<h2 align="left">
+  Features On :white_check_mark:
+  
+</h2>
+<p align="justify">
+  :white_check_mark: Groups organization by our standard
+  :white_check_mark: Organized Elevations Symbol generation
+  :construction: Automatic blocks parameters input
+  
+  
+  If you need more information <a href="https://www.linkedin.com/in/ian-mota-164a36195/">contacte-me</a>!
 </p>
 
