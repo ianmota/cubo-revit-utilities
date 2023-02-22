@@ -27,20 +27,45 @@ namespace CuboUtilities
                           .ToArray());
             return result;
         }
-        public static IList<Group> AllGrps(Document doc)
+        public static IList<Group> AllGrps(Document doc,string alvenaria)
         {   //
             //Resumo:
-            //select all document model groups
+            //select masonry model groups
 
-            IList<Group> allGrps = new FilteredElementCollector(doc)
-            .OfClass(typeof(Group))
-            .OfCategory(BuiltInCategory.OST_IOSModelGroups)
-            .Cast<Group>()
-            .ToList();
+            IList<Group> allModelsGrps = new FilteredElementCollector(doc)
+                .OfClass(typeof(Group))
+                .OfCategory(BuiltInCategory.OST_IOSModelGroups)
+                .Cast<Group>()
+                .ToList();
+            IList<Group> allGrps = new List<Group>();
+            if (alvenaria == "estrutural")
+            {
+                allGrps = new List<Group>(from grp in allModelsGrps
+                                        from e in grp.GetMemberIds()
+                                        .Where(x => doc.GetElement(x)
+                                        .GetType().Equals(typeof(Wall))
+                                        && !doc.GetElement(x)
+                                        .Name.ToString()
+                                        .Contains("Vedação"))
+                                        select grp);
+            }
+
+            else if (alvenaria == "vedacao")
+            {
+                 allGrps = new List<Group>(from grp in allModelsGrps
+                                            from e in grp.GetMemberIds()
+                                            .Where(x => doc.GetElement(x)
+                                            .Name.ToString()
+                                            .Contains("Vedação")
+                                            && doc.GetElement(x)
+                                            .GetType().Equals(typeof(Wall)))
+                                            select grp);
+
+            }
 
             return (allGrps);
         }
-        public static void RandomRenameGroups(IList<Group> groups, Document doc)
+        private static void RandomRenameGroups(IList<Group> groups, Document doc)
         {
             //
             //Resumo:
@@ -56,7 +81,7 @@ namespace CuboUtilities
                 }
             }
         }
-        public static int OrdenatedRenameGroups(IList<Group> groups, XYZ linepoint, Document doc, int nGroup)
+        private static int OrdenatedRenameGroups(IList<Group> groups, XYZ linepoint, Document doc, int nGroup)
         {
             
             foreach (Group grp in groups)
@@ -91,7 +116,7 @@ namespace CuboUtilities
             return nGroup;
 
         }
-        public static List<XYZ> LinePoints(IList<XYZ> groupsPoint, string oriented)
+        private static List<XYZ> LinePoints(IList<XYZ> groupsPoint, string oriented)
         {   
             //
             //Resumo:
@@ -129,7 +154,7 @@ namespace CuboUtilities
             return linePoints;
             
         }
-        public static IList<Group> OrientationGroups(IList<Group> groups, View view, string orientation)
+        private static IList<Group> OrientationGroups(IList<Group> groups, View view, string orientation)
         {   //
             //Resumo:
             //separete the groups by orientation
@@ -188,7 +213,7 @@ namespace CuboUtilities
             }
             return groupsPoints;
         }
-        public static int TotalLines(IList<XYZ> grpPoints,string oriented)
+        private static int TotalLines(IList<XYZ> grpPoints,string oriented)
         {
             return grpPoints.Select(point => (oriented == "vertical" ? point.X : point.Y).ToString("F")).Distinct().Count();
         }
@@ -198,33 +223,37 @@ namespace CuboUtilities
             UIDocument uidoc = commandData.Application.ActiveUIDocument;
             Document doc = uidoc.Document;
             View view = doc.ActiveView;
-            if (AllGrps(doc).Count > 0)
-            {
-                RandomRenameGroups(AllGrps(doc), doc);
-                int nGroup = 1;
 
-                IList<string> groupPosition = new List<string> { "horizontal", "vertical" };
+            int nGroup = 1;
+            foreach(string alvenaria in new List<string> { "estrutural", "vedacao"}){
 
-                foreach (string _position in groupPosition)
+                if (AllGrps(doc,alvenaria).Count > 0)
                 {
-                    IList<Group> flatGroups = OrientationGroups(AllGrps(doc), view, _position);
-                    IList<LocationPoint> flatGroupsLocation = GroupsLocation(flatGroups);
-                    IList<XYZ> flatGroupsPoints = GroupsPoints(flatGroupsLocation);
-                    int yTotalLines = TotalLines(flatGroupsPoints,_position);
+                    RandomRenameGroups(AllGrps(doc,alvenaria), doc);
+                    IList<string> groupPosition = new List<string> { "horizontal", "vertical" };
 
-                    int flatCount = 0;
-                    while (flatCount < yTotalLines)
+                    foreach (string _position in groupPosition)
                     {
-                        List<XYZ> flatLinePoints = LinePoints(flatGroupsPoints, _position);
-                        foreach (XYZ point in flatLinePoints)
+                        IList<Group> flatGroups = OrientationGroups(AllGrps(doc,alvenaria), view, _position);
+                        IList<LocationPoint> flatGroupsLocation = GroupsLocation(flatGroups);
+                        IList<XYZ> flatGroupsPoints = GroupsPoints(flatGroupsLocation);
+                        int yTotalLines = TotalLines(flatGroupsPoints,_position);
+
+                        int flatCount = 0;
+                        while (flatCount < yTotalLines)
                         {
-                            flatGroupsPoints.Remove(point);
-                            nGroup = OrdenatedRenameGroups(flatGroups, point, doc, nGroup);
+                            List<XYZ> flatLinePoints = LinePoints(flatGroupsPoints, _position);
+                            foreach (XYZ point in flatLinePoints)
+                            {
+                                flatGroupsPoints.Remove(point);
+                                nGroup = OrdenatedRenameGroups(flatGroups, point, doc, nGroup);
+                            }
+                            flatCount += 1;
                         }
-                        flatCount += 1;
                     }
+                    TaskDialog.Show("Result", "Parede do tipo "+alvenaria+" renomeadas!");
                 }
-                TaskDialog.Show("Result", "Os grupos foram renomeados com sucesso!");
+
             }
             return Result.Succeeded;
         }
