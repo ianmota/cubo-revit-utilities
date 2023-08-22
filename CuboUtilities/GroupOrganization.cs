@@ -61,6 +61,17 @@ namespace CuboUtilities
                                             .GetType().Equals(typeof(Wall)))
                                             select grp);
 
+                foreach (Group grp in allGrps.ToList())
+                {
+                    foreach (ElementId e in grp.GetMemberIds())
+                    {
+                        if (!doc.GetElement(e).Name.ToString().Contains("Vedação"))
+                        {
+                            allGrps.Remove(grp);
+                        }
+                    }
+                }
+
             }
 
             return (allGrps);
@@ -226,7 +237,7 @@ namespace CuboUtilities
 
             int nGroup = 1;
             foreach(string alvenaria in new List<string> { "estrutural", "vedacao"}){
-
+                
                 if (AllGrps(doc,alvenaria).Count > 0)
                 {
                     RandomRenameGroups(AllGrps(doc,alvenaria), doc);
@@ -251,10 +262,9 @@ namespace CuboUtilities
                             flatCount += 1;
                         }
                     }
-                    TaskDialog.Show("Result", "Parede do tipo "+alvenaria+" renomeadas!");
                 }
-
             }
+            TaskDialog.Show("Sucesso!", "Todas as paredes foram renomeadas!");
             return Result.Succeeded;
         }
     }
