@@ -38,6 +38,8 @@ namespace CuboUtilities
                 .Cast<Group>()
                 .ToList();
             IList<Group> allGrps = new List<Group>();
+
+            //structural masonry selector
             if (alvenaria == "estrutural")
             {
                 allGrps = new List<Group>(from grp in allModelsGrps
@@ -94,11 +96,19 @@ namespace CuboUtilities
         }
         private static int OrdenatedRenameGroups(IList<Group> groups, XYZ linepoint, Document doc, int nGroup)
         {
-            
+            IList<XYZ> points = GroupsPoints(GroupsLocation(doc, groups));
+
             foreach (Group grp in groups)
             {
-                LocationPoint lPoint = grp.Location as LocationPoint;
-                XYZ refPoint = lPoint.Point;
+                IList<ElementId> wallId = new List<ElementId>(from e in grp.GetMemberIds()
+                                                               .Where(x => doc.GetElement(x)
+                                                               .GetType().Equals(typeof(Wall)))
+                                                              select e);
+
+                Wall wallCenterLine = (Wall)doc.GetElement(wallId.First());
+
+                LocationCurve locationcurve = wallCenterLine.Location as LocationCurve;
+                XYZ refPoint = locationcurve.Curve.GetEndPoint(0);
 
                 if (linepoint.ToString() == refPoint.ToString())
                 {
@@ -198,29 +208,36 @@ namespace CuboUtilities
             }
             return orientedGroups;
         }
-        public static IList<LocationPoint> GroupsLocation(IList<Group> groups)
-        {
+        public static IList<Location> GroupsLocation(Document doc, IList<Group> groups)        {
             //
             //Resumo:
             //get groups locations
-            
-            IList<LocationPoint> grpLocations = new List<LocationPoint>();
+
+            IList<Location> grpLocations = new List<Location>();
+                                              
             foreach (Group grp in groups)
             {
-                grpLocations.Add(grp.Location as LocationPoint);
+                IList<ElementId> wallId = new List<ElementId>(from e in grp.GetMemberIds()
+                                                              .Where(x => doc.GetElement(x)
+                                                              .GetType().Equals(typeof(Wall)))
+                                                              select e);
+
+                Wall wallCenterLine = (Wall)doc.GetElement(wallId.First());
+
+                grpLocations.Add(wallCenterLine.Location);
             }
             return grpLocations;
         }
-        public static IList<XYZ> GroupsPoints(IList<LocationPoint> groupsLocation)
+        public static IList<XYZ> GroupsPoints(IList<Location> groupsLocation)
         {
             //
             //Resumo:
             //get groups points origin
 
             IList<XYZ> groupsPoints = new List<XYZ>();
-            foreach (LocationPoint grpLocation in groupsLocation)
+            foreach (LocationCurve grpLocation in groupsLocation)
             {
-                groupsPoints.Add(grpLocation.Point);
+                groupsPoints.Add(grpLocation.Curve.GetEndPoint(0));
             }
             return groupsPoints;
         }
@@ -236,21 +253,24 @@ namespace CuboUtilities
             View view = doc.ActiveView;
 
             int nGroup = 1;
-            foreach(string alvenaria in new List<string> { "estrutural", "vedacao"}){
-                
-                if (AllGrps(doc,alvenaria).Count > 0)
+            foreach (string alvenaria in new List<string> { "estrutural", "vedacao" })
+            {
+
+                if (AllGrps(doc, alvenaria).Count > 0)
                 {
-                    RandomRenameGroups(AllGrps(doc,alvenaria), doc);
+
+                    RandomRenameGroups(AllGrps(doc, alvenaria), doc);
                     IList<string> groupPosition = new List<string> { "horizontal", "vertical" };
 
                     foreach (string _position in groupPosition)
                     {
-                        IList<Group> flatGroups = OrientationGroups(AllGrps(doc,alvenaria), view, _position);
-                        IList<LocationPoint> flatGroupsLocation = GroupsLocation(flatGroups);
+                        IList<Group> flatGroups = OrientationGroups(AllGrps(doc, alvenaria), view, _position);
+                        IList<Location> flatGroupsLocation = GroupsLocation(doc, flatGroups);
                         IList<XYZ> flatGroupsPoints = GroupsPoints(flatGroupsLocation);
-                        int yTotalLines = TotalLines(flatGroupsPoints,_position);
 
+                        int yTotalLines = TotalLines(flatGroupsPoints, _position);
                         int flatCount = 0;
+
                         while (flatCount < yTotalLines)
                         {
                             List<XYZ> flatLinePoints = LinePoints(flatGroupsPoints, _position);
