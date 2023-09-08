@@ -37,6 +37,7 @@ namespace CuboUtilities
                 .OfCategory(BuiltInCategory.OST_IOSModelGroups)
                 .Cast<Group>()
                 .ToList();
+
             IList<Group> allGrps = new List<Group>();
 
             //structural masonry selector
@@ -67,7 +68,8 @@ namespace CuboUtilities
                 {
                     foreach (ElementId e in grp.GetMemberIds())
                     {
-                        if (!doc.GetElement(e).Name.ToString().Contains("Vedação"))
+                        if (!doc.GetElement(e).Name.ToString().Contains("Vedação") && doc.GetElement(e)
+                            .GetType().Equals(typeof(Wall)))
                         {
                             allGrps.Remove(grp);
                         }
@@ -255,7 +257,6 @@ namespace CuboUtilities
             int nGroup = 1;
             foreach (string alvenaria in new List<string> { "estrutural", "vedacao" })
             {
-
                 if (AllGrps(doc, alvenaria).Count > 0)
                 {
 
